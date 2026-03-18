@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Solar System Simulator</title>
+<style>
+    body {
+        margin: 0;
+        background: black;
+        color: white;
+        text-align: center;
+        font-family: Arial;
+    }
+
+    #controls {
+        padding: 10px;
+        background: #111;
+    }
+
+    button, input {
+        margin: 5px;
+        padding: 8px;
+        font-size: 14px;
+    }
+
+    canvas {
+        display: block;
+        margin: auto;
+        background: black;
+    }
+
+    #timeDisplay {
+        margin-top: 10px;
+        font-size: 18px;
+        color: #00ffcc;
+    }
+</style>
+</head>
+<body>
+
+<div id="controls">
+    <input type="date" id="dateInput">
+    <button onclick="setDate()">Set Date</button>
+    <button onclick="play()">▶ Play</button>
+    <button onclick="pause()">⏸ Pause</button>
+
+    <div id="timeDisplay"></div>
+</div>
+
+<canvas id="solarCanvas" width="800" height="800"></canvas>
+
+<script>
+const canvas = document.getElementById("solarCanvas");
+const ctx = canvas.getContext("2d");
+
+const centerX = canvas.width / 2;
+const centerY = canvas.height / 2;
+
+const planets = [
+    { name: "Mercury", radius: 50, period: 88, color: "gray" },
+    { name: "Venus", radius: 80, period: 225, color: "orange" },
+    { name: "Earth", radius: 110, period: 365, color: "blue" },
+    { name: "Mars", radius: 140, period: 687, color: "red" },
+    { name: "Jupiter", radius: 190, period: 4333, color: "brown" },
+    { name: "Saturn", radius: 240, period: 10759, color: "gold" }
+];
+
+let currentDate = new Date();
+let isPlaying = false;
+let interval;
+
+// Convert date to days
+function getDaysSinceEpoch(date) {
+    const epoch = new Date("2000-01-01");
+    return (date - epoch) / (1000 * 60 * 60 * 24);
+}
+
+// MAIN DRAW FUNCTION
+function drawSolarSystem(date) {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // 🌞 Sun
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, 20, 0, Math.PI * 2);
+    ctx.fillStyle = "yellow";
+    ctx.fill();
+
+    // ⭐ 27 RADIAL LINES
+    let totalLines = 27;
+    let maxRadius = 350;
+
+    for (let i = 0; i < totalLines; i++) {
+        let angle = (i / totalLines) * 2 * Math.PI;
+
+        let x = centerX + maxRadius * Math.cos(angle);
+        let y = centerY + maxRadius * Math.sin(angle);
+
+        ctx.beginPath();
+        ctx.moveTo(centerX, centerY);
+        ctx.lineTo(x, y);
+        ctx.strokeStyle = "#222";
+        ctx.lineWidth = 1;
+        ctx.stroke();
+    }
+
+    let days = getDaysSinceEpoch(date);
+
+    // 🪐 Planets
+    planets.forEach(p => {
+
+        // Orbit
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, p.radius, 0, Math.PI * 2);
+        ctx.strokeStyle = "#333";
+        ctx.stroke();
+
+        let angle = (days % p.period) / p.period * 2 * Math.PI;
+
+        let x = centerX + p.radius * Math.cos(angle);
+        let y = centerY + p.radius * Math.sin(angle);
+
+        // Planet
+        ctx.beginPath();
+        ctx.arc(x, y, 6, 0, Math.PI * 2);
+        ctx.fillStyle = p.color;
+        ctx.fill();
+
+        // Label
+        ctx.fillStyle = "white";
+        ctx.fillText(p.name, x + 8, y);
+    });
+
+    // 🕒 Time display
+    document.getElementById("timeDisplay").innerText =
+        "Simulation Date: " + date.toDateString();
+}
+
+// ▶ PLAY
+function play() {
+    if (!isPlaying) {
+        isPlaying = true;
+        interval = setInterval(() => {
+            currentDate.setDate(currentDate.getDate() + 1);
+            drawSolarSystem(currentDate);
+        }, 1000);
+    }
+}
+
+// ⏸ PAUSE
+function pause() {
+    isPlaying = false;
+    clearInterval(interval);
+}
+
+// 📅 SET DATE
+function setDate() {
+    const input = document.getElementById("dateInput").value;
+    if (input) {
+        currentDate = new Date(input);
+        drawSolarSystem(currentDate);
+    }
+}
+
+// Initial load
+drawSolarSystem(currentDate);
+</script>
+
+</body>
+</html>
